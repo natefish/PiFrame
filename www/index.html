@@ -17,7 +17,7 @@
 
         .bg {
             /* The image used */
-            background-image: url("img_girl.jpg");
+            background-image: url("images/mountain1.jpg");
 
             /* Full height */
             height: 100%;
@@ -25,7 +25,7 @@
             /* Center and scale the image nicely */
             background-position: center;
             background-repeat: no-repeat;
-            background-size: cover;
+            background-size: contain;
         }
 
 
@@ -67,7 +67,15 @@
             transition: margin-left .5s;
             padding: 16px;
         }
-
+        
+        #main span{
+            opacity: 0.1;
+        }
+        
+        #main span:hover{
+            opacity: 1.0;
+        }
+        
         @media screen and (max-height: 450px) {
             .sidenav {
                 padding-top: 15px;
@@ -91,7 +99,7 @@
         </div>
 
         <div id="main">
-            <span style="font-size:30px;cursor:pointer" onclick="openNav()">&#9776;</span>
+            <span style="font-size:30px;cursor:pointer;" onclick="openNav()">&#9776;</span>
         </div>
     </div>
 
