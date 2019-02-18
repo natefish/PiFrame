@@ -17,8 +17,8 @@ html {
     right:0;
     bottom:0;
 
-    /* The image used */
-    background-image: url("../images/mountain2.jpg");
+    /* The image used 
+    background-image: url("../images/mountain2.jpg"); */
 
     /* Full height */
     height: 100%;
@@ -27,17 +27,17 @@ html {
     background-position: center;
     background-repeat: no-repeat;
     background-size: 100% 100%;
-    filter: grayscale(80%) blur(10px);
+    filter: grayscale(85%) blur(10px);
 
     transition-property: background-image;
-    transition-duration: 4s;
+    /*transition-duration: 1s;*/
 
     z-index: -1;
 }
 
 #photoDisplay {
-    /* The image used */
-    background-image: url("../images/mountain2.jpg");
+    /* The image used
+    background-image: url("../images/mountain2.jpg"); */
 
     /* Full height */
     height: 100%;
@@ -46,7 +46,7 @@ html {
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;
-    transition: 4s;
+    /*transition: 4s;*/
     z-index: 10;
 }
 

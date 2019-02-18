@@ -32,10 +32,21 @@
         };
         xhttp.open("GET", "images.xml", true);
         xhttp.send();
+        
+        function preloadNextImage(imgIndex, imgNodes){
+            imgIndex++;
+            if (imgIndex >= imgNodes.length) { imgIndex = 0 }
+
+            imgURL = imgNodes[imgIndex].childNodes[0].nodeValue;
+
+            //Pre-load the image
+            var nextImg = new Image();
+            nextImg.src = imgURL;
+        }
 
         function stageSlides(xmlDoc) {
             var imgNodes = xmlDoc.getElementsByTagName("img");
-            var imgIndex = 0;
+            var imgIndex = imgNodes.length;
             var imgURL = "";
 
             setInterval(function () {
@@ -44,13 +55,11 @@
 
                 imgURL = imgNodes[imgIndex].childNodes[0].nodeValue;
 
-                //Pre-load the image
-                var nextImg = new Image();
-                nextImg.src = imgURL;
-
                 document.getElementById("photoDisplay").style.backgroundImage = "url('" + imgURL + "')";
                 document.getElementById("bgFill").style.backgroundImage = "url('" + imgURL + "')";
-            }, 5000);
+                
+                preloadNextImage(imgIndex, imgNodes);
+            }, 30000);
         }
 
         function openNav() {
