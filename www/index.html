@@ -10,7 +10,7 @@
     <div id="bgFill">
     </div>
     <div id="photoDisplay">
-        <div id="mySidenav" class="sidenav">
+        <!--div id="mySidenav" class="sidenav">
             <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
             <a href="#">Settings</a>
             <a href="#">About</a>
@@ -19,7 +19,7 @@
 
         <div id="main">
             <span style="cursor:pointer;" onclick="openNav()" id="myMenuBtn">&#9776;</span>
-        </div>
+        </div-->
     </div>
 
     <script>
@@ -49,6 +49,15 @@
             var imgIndex = imgNodes.length;
             var imgURL = "";
 
+                if (imgIndex >= imgNodes.length) { imgIndex = 0 }
+
+                imgURL = imgNodes[imgIndex].childNodes[0].nodeValue;
+
+                document.getElementById("photoDisplay").style.backgroundImage = "url('" + imgURL + "')";
+                document.getElementById("bgFill").style.backgroundImage = "url('" + imgURL + "')";
+
+                preloadNextImage(imgIndex, imgNodes);
+
             setInterval(function () {
                 imgIndex++;
                 if (imgIndex >= imgNodes.length) { imgIndex = 0 }
@@ -59,7 +68,7 @@
                 document.getElementById("bgFill").style.backgroundImage = "url('" + imgURL + "')";
                 
                 preloadNextImage(imgIndex, imgNodes);
-            }, 30000);
+            }, 900000);
         }
 
         function openNav() {
