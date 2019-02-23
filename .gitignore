@@ -1,3 +1,4 @@
 /www/images.xml
 /www/images/*.*
 /www/settings.txt
+node_modules/
