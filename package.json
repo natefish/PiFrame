@@ -1,0 +1,19 @@
+{
+  "name": "piframe",
+  "version": "1.0.0",
+  "description": "A simple digital picture frame based on a Raspberry Pi 3 A+",
+  "main": "adminServer.js",
+  "scripts": {
+    "test": "\"echo \\\"Error: no test specified\\\" &amp;&amp; exit 1\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/natefish/PiFrame.git"
+  },
+  "author": "Nathan Reinhard",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/natefish/PiFrame/issues"
+  },
+  "homepage": "https://github.com/natefish/PiFrame#readme"
+}

@@ -1,25 +1,22 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<title>Welcome to nginx!</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
+    <title>Welcome to nginx!</title>
+    <link rel="stylesheet" type="text/css" href="/css/PiFrameAdmin.css">
 </head>
+
 <body>
-<h1>Welcome to nginx!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
+    <div id="mySidenav" class="sidenav">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a href="#">Settings</a>
+        <a href="#">About</a>
+        <a href="#">Donate</a>
+    </div>
 
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
-
-<p><em>Thank you for using nginx.</em></p>
+    <div id="main">
+        <span style="cursor:pointer;" onclick="openNav()" id="myMenuBtn">&#9776;</span>
+    </div>
 </body>
+
 </html>
