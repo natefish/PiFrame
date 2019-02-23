@@ -1,12 +1,12 @@
 var slideDelay = 30000;
 var imgPath = "images/sample/";
 var imgList = "images-example.xml";
-var Randomize
+var isRandom = true;
 
-function getFile(filePath){
+function getFile(filePath) {
     console.info("Loading file: " + filePath);
 
-    return new Promise(function(resolve, reject){
+    return new Promise(function (resolve, reject) {
         var xhttp = new XMLHttpRequest();
 
         xhttp.open("GET", filePath, true);
@@ -20,40 +20,40 @@ function getFile(filePath){
     });
 }
 
-async function initializeSettings(){
+async function initializeSettings() {
     console.info("Initializing settings");
 
     var res = await getFile("settings.txt");
 
-    if(res.status == 200){
+    if (res.status == 200) {
         var jsonDoc = JSON.parse(res.responseText);
 
-        if(jsonDoc.slideDelay != null){
+        if (jsonDoc.slideDelay != null) {
             console.info("Setting slideDelay (" + slideDelay + ") to " + jsonDoc.slideDelay);
             slideDelay = jsonDoc.slideDelay;
         }
-        if(jsonDoc.imgPath != null){
+        if (jsonDoc.imgPath != null) {
             console.info("Setting imgPath (" + imgPath + ") to " + jsonDoc.imgPath);
             imgPath = jsonDoc.imgPath;
         }
-        if(jsonDoc.imgPath != null){
-            console.info("Setting imgPath (" + imgPath + ") to " + jsonDoc.imgPath);
-            imgPath = jsonDoc.imgPath;
-        }
-        if(jsonDoc.imgList != null){
+        if (jsonDoc.imgList != null) {
             console.info("Setting imgList (" + imgList + ") to " + jsonDoc.imgList);
             imgList = jsonDoc.imgList;
+        }
+        if (jsonDoc.randomize != null) {
+            console.info("Setting randomize (" + isRandom + ") to " + jsonDoc.randomize);
+            isRandom = jsonDoc.randomize;
         }
     }
 
     startSlideshow();
 }
 
-async function startSlideshow(){
+async function startSlideshow() {
     var res = await getFile(imgList);
-    if(res.status == 200){
+    if (res.status == 200) {
         stageSlides(res.responseXML);
-    }else{
+    } else {
         document.getElementById("photoDisplay").innerHTML = "Unable to find '" + imgList + "'";
     }
 }
@@ -69,10 +69,10 @@ function preloadNextImage(imgIndex, imgNodes) {
     nextImg.src = imgURL;
 }
 
-function loadImage(imgIndex,imgNodes){
+function loadImage(imgIndex, imgNodes) {
     var imgURL = "";
 
-    imgURL = imgPath + imgNodes[imgIndex].childNodes[0].nodeValue;
+    imgURL = imgPath + imgNodes[imgIndex]//.childNodes[0].nodeValue;
 
     var newImg = new Image();
     newImg.src = imgURL;
@@ -94,16 +94,29 @@ function loadImage(imgIndex,imgNodes){
 function stageSlides(xmlDoc) {
     var imgNodes = xmlDoc.getElementsByTagName("img");
     var imgIndex = 0;
+    var imgUrls = new Array();
+
+    for (var i = 0; i < imgNodes.length; i++) {
+        imgUrls.push(imgNodes[i].childNodes[0].nodeValue);
+    }
+    if (isRandom) {
+        imgUrls.sort(function (a, b) { return 0.5 - Math.random() });
+    }
 
     //TODO: Randomize picture selection by default, maybe use session storage
 
-    loadImage(imgIndex, imgNodes);
+    loadImage(imgIndex, imgUrls);
 
     setInterval(function () {
         imgIndex++;
-        if (imgIndex >= imgNodes.length) { imgIndex = 0 }
+        if (imgIndex >= imgUrls.length) {
+            imgIndex = 0;
+            if (isRandom) {
+                imgUrls.sort(function (a, b) { return 0.5 - Math.random() });
+            }
+        }
 
-        loadImage(imgIndex, imgNodes);
+        loadImage(imgIndex, imgUrls);
 
     }, slideDelay);
 }

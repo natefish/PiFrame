@@ -2,5 +2,6 @@
     "_comment": "To set a variable to a custom value, remove the preceding '_'",
     "_slideDelay": 10000,
     "_imagePath": "images/",
-    "_imgList": "images.xml"
+    "_imgList": "images.xml",
+    "_randomize": true
 }
