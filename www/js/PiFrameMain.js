@@ -1,5 +1,6 @@
 var slideDelay = 30000;
 var imgPath = "images/sample/";
+var imgList = "images-example.xml";
 var Randomize
 
 function getFile(filePath){
@@ -31,15 +32,29 @@ async function initializeSettings(){
             console.info("Setting slideDelay (" + slideDelay + ") to " + jsonDoc.slideDelay);
             slideDelay = jsonDoc.slideDelay;
         }
+        if(jsonDoc.imgPath != null){
+            console.info("Setting imgPath (" + imgPath + ") to " + jsonDoc.imgPath);
+            imgPath = jsonDoc.imgPath;
+        }
+        if(jsonDoc.imgPath != null){
+            console.info("Setting imgPath (" + imgPath + ") to " + jsonDoc.imgPath);
+            imgPath = jsonDoc.imgPath;
+        }
+        if(jsonDoc.imgList != null){
+            console.info("Setting imgList (" + imgList + ") to " + jsonDoc.imgList);
+            imgList = jsonDoc.imgList;
+        }
     }
+
+    startSlideshow();
 }
 
 async function startSlideshow(){
-    var res = await getFile("images.xml");
+    var res = await getFile(imgList);
     if(res.status == 200){
         stageSlides(res.responseXML);
     }else{
-        stageSlides(getFile("images-example.xml").responseXML);
+        document.getElementById("photoDisplay").innerHTML = "Unable to find '" + imgList + "'";
     }
 }
 
@@ -59,10 +74,20 @@ function loadImage(imgIndex,imgNodes){
 
     imgURL = imgPath + imgNodes[imgIndex].childNodes[0].nodeValue;
 
-    document.getElementById("photoDisplay").style.backgroundImage = "url('" + imgURL + "')";
-    document.getElementById("bgFill").style.backgroundImage = "url('" + imgURL + "')";
+    var newImg = new Image();
+    newImg.src = imgURL;
+    newImg.onload = function () {
+        document.getElementById("photoDisplay").innerHTML = "";
+        document.getElementById("photoDisplay").style.backgroundImage = "url('" + imgURL + "')";
+        document.getElementById("bgFill").style.backgroundImage = "url('" + imgURL + "')";
+    }
+    newImg.onerror = function () {
+        document.getElementById("photoDisplay").innerHTML = "<span class='message'>Unable to find '" + imgURL + "'</span>";
+        document.getElementById("photoDisplay").style.backgroundImage = "url('')";
+        document.getElementById("bgFill").style.backgroundImage = "url('')";
+    }
 
-    preloadNextImage(imgIndex, imgNodes);
+    //preloadNextImage(imgIndex, imgNodes);
 
 }
 
