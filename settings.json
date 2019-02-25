@@ -1,0 +1,9 @@
+{
+    "_comment": "To set a variable to a custom value, remove the preceding '_'",
+    "slideDelay": 10000,
+    "imagePath": "images/sample/",
+    "imgList": "images.xml",
+    "randomize": true,
+    "ADMIN_SERVER": true,
+    "ADMIN_PORT": 8080
+}

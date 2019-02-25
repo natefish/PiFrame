@@ -1,13 +1,10 @@
-var slideDelay = 30000;
-var imgPath = "images/sample/";
-var imgList = "images-example.xml";
-var Randomize
+const rm = require('electron').remote;
 
-function getFile(filePath){
+function getFile(filePath) {
     console.info("Loading file: " + filePath);
 
-    return new Promise(function(resolve, reject){
-        var xhttp = new XMLHttpRequest();
+    return new Promise(function (resolve, reject) {
+        const xhttp = new XMLHttpRequest();
 
         xhttp.open("GET", filePath, true);
         xhttp.onload = function () {
@@ -20,59 +17,31 @@ function getFile(filePath){
     });
 }
 
-async function initializeSettings(){
+async function initializeSettings() {
     console.info("Initializing settings");
-
-    var res = await getFile("settings.txt");
-
-    if(res.status == 200){
-        var jsonDoc = JSON.parse(res.responseText);
-
-        if(jsonDoc.slideDelay != null){
-            console.info("Setting slideDelay (" + slideDelay + ") to " + jsonDoc.slideDelay);
-            slideDelay = jsonDoc.slideDelay;
-        }
-        if(jsonDoc.imgPath != null){
-            console.info("Setting imgPath (" + imgPath + ") to " + jsonDoc.imgPath);
-            imgPath = jsonDoc.imgPath;
-        }
-        if(jsonDoc.imgPath != null){
-            console.info("Setting imgPath (" + imgPath + ") to " + jsonDoc.imgPath);
-            imgPath = jsonDoc.imgPath;
-        }
-        if(jsonDoc.imgList != null){
-            console.info("Setting imgList (" + imgList + ") to " + jsonDoc.imgList);
-            imgList = jsonDoc.imgList;
-        }
-    }
+    console.info("imgPath: " + rm.getGlobal('pfEnv').imgPath);
+    console.info("imgList: " + rm.getGlobal('pfEnv').imgList);
+    console.info("slideDelay: " + rm.getGlobal('pfEnv').slideDelay);
+    console.info("isRandom: " + rm.getGlobal('pfEnv').isRandom);
 
     startSlideshow();
 }
 
-async function startSlideshow(){
-    var res = await getFile(imgList);
-    if(res.status == 200){
+
+async function startSlideshow() {
+    var res = await getFile(rm.getGlobal('pfEnv').imgList);
+    if (res.status == 200) {
         stageSlides(res.responseXML);
-    }else{
-        document.getElementById("photoDisplay").innerHTML = "Unable to find '" + imgList + "'";
+    } else {
+        document.getElementById("photoDisplay").innerHTML = "Unable to find '" + rm.getGlobal('pfEnv').imgList + "'";
     }
 }
 
-function preloadNextImage(imgIndex, imgNodes) {
-    imgIndex++;
-    if (imgIndex >= imgNodes.length) { imgIndex = 0 }
+function loadImage(imgIndex, imgURLs) {
 
-    imgURL = imgPath + imgNodes[imgIndex].childNodes[0].nodeValue;
+    var imgURL = rm.getGlobal('pfEnv').imgPath + imgURLs[imgIndex];
 
-    //Pre-load the image
-    var nextImg = new Image();
-    nextImg.src = imgURL;
-}
-
-function loadImage(imgIndex,imgNodes){
-    var imgURL = "";
-
-    imgURL = imgPath + imgNodes[imgIndex].childNodes[0].nodeValue;
+    console.info("Loading img: " + imgURL);
 
     var newImg = new Image();
     newImg.src = imgURL;
@@ -86,38 +55,33 @@ function loadImage(imgIndex,imgNodes){
         document.getElementById("photoDisplay").style.backgroundImage = "url('')";
         document.getElementById("bgFill").style.backgroundImage = "url('')";
     }
-
-    //preloadNextImage(imgIndex, imgNodes);
-
 }
 
 function stageSlides(xmlDoc) {
     var imgNodes = xmlDoc.getElementsByTagName("img");
     var imgIndex = 0;
+    var imgUrls = new Array();
 
-    //TODO: Randomize picture selection by default, maybe use session storage
+    for (var i = 0; i < imgNodes.length; i++) {
+        imgUrls.push(imgNodes[i].childNodes[0].nodeValue);
+    }
+    if (rm.getGlobal('pfEnv').isRandom) {
+        imgUrls.sort(function (a, b) { return 0.5 - Math.random() });
+    }
 
-    loadImage(imgIndex, imgNodes);
+    console.info("imgUrls: " + imgUrls);
+
+    loadImage(imgIndex, imgUrls);
 
     setInterval(function () {
         imgIndex++;
-        if (imgIndex >= imgNodes.length) { imgIndex = 0 }
+        if (imgIndex >= imgUrls.length) {
+            imgIndex = 0;
+            if (rm.getGlobal('pfEnv').isRandom) {
+                imgUrls.sort(function (a, b) { return 0.5 - Math.random() });
+            }
+        }
 
-        loadImage(imgIndex, imgNodes);
-
-    }, slideDelay);
-}
-
-function openNav() {
-    document.getElementById("mySidenav").style.width = "200px";
-    document.getElementById("main").style.marginLeft = "200px";
-    document.getElementById("myMenuBtn").style.fontSize = "0px";
-    document.body.style.backgroundColor = "rgba(0,0,0,0.4)";
-}
-
-function closeNav() {
-    document.getElementById("mySidenav").style.width = "0";
-    document.getElementById("main").style.marginLeft = "0";
-    document.getElementById("myMenuBtn").style.fontSize = "30px";
-    document.body.style.backgroundColor = "black";
+        loadImage(imgIndex, imgUrls);
+    }, rm.getGlobal('pfEnv').slideDelay);
 }
