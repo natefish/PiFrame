@@ -10,7 +10,7 @@ let win
 function createWindow() {
     // Create the browser window.
     win = new BrowserWindow({
-        fullscreen: true,
+        //fullscreen: true,
         autoHideMenuBar: true,
         titleBarStyle: "hidden",
         webPreferences: {

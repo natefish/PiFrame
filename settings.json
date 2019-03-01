@@ -1,9 +1,14 @@
 {
     "_comment": "To set a variable to a custom value, remove the preceding '_'",
-    "slideDelay": 10000,
-    "imagePath": "images/sample/",
-    "imgList": "images.xml",
-    "randomize": true,
-    "ADMIN_SERVER": true,
-    "ADMIN_PORT": 8080
+    "viewSettings": {
+        "slideDelay": 10000,
+        "imagePath": "images/sample/",
+        "imgList": "images.xml",
+        "randomize": true
+    },
+    "serverSettings": {
+        "ADMIN_SERVER": true,
+        "ADMIN_PORT": 8080,
+        "ADMIN_LOG_LEVEL:": "debug"
+    }
 }
