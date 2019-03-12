@@ -2,11 +2,9 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-function startServer() {
-  http.createServer(function (req, res) {
+function startServer(ph) {
 
-    if (req.url == '/inform')
-      return;
+  http.createServer(function (req, res) {
 
     reqLogger(req);
 
@@ -17,12 +15,19 @@ function startServer() {
 module.exports.startServer = startServer;
 
 function reqLogger(req) {
-  console.info("\n\n*****************************");
-  console.info("* New Request" + req.url);
-  console.info("*****************************");
-  console.info(req.headers);
-  console.info(req.url);
-  console.info(req.method);
+  switch (req.url) {
+    case '/inform':
+      console.info("* New Request" + req.url);
+      break;
+    default:
+      console.info("\n\n*****************************");
+      console.info("* New Request" + req.url);
+      console.info("*****************************");
+      console.info(req.headers);
+      console.info(req.url);
+      console.info(req.method);
+  }
+
 }
 
 function reqRouter(req, res) {
@@ -31,7 +36,6 @@ function reqRouter(req, res) {
     case 'GET':
       handleGET(req, res);
       break;
-    case 'POST':
     case 'PUT':
       handlePUT(req, res);
       break;
@@ -70,7 +74,7 @@ function handleGET(req, res) {
   }
 
   if (req.url == '/settings.json') {
-    data = JSON.stringify(global.pfEnv);
+    data = JSON.stringify(global.pfEnvRaw.viewSettings);
     console.debug("Sending settings: \n" + data);
 
     res.writeHead(200, { 'Content-Type': contentType });
@@ -118,8 +122,6 @@ function handlePUT(req, res) {
   req.on('end', function () {
     console.info(JSON.parse(body));
   });
-
-
 
   if (req.url == '/') {
     filePath = '/www-admin/index.html';

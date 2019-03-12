@@ -61,4 +61,4 @@ console.info(process.versions);
 // code. You can also put them in separate files and require them here.
 ph.initializeSettings();
 if (process.env.ADMIN_SERVER)
-    as.startServer();
+    as.startServer(ph);

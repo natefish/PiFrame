@@ -1,4 +1,5 @@
 const rm = require('electron').remote;
+var curInrvl;
 
 function getFile(filePath) {
     console.info("Loading file: " + filePath);
@@ -23,15 +24,16 @@ async function initializeSettings() {
     console.info("imgList: " + rm.getGlobal('pfEnv').imgList);
     console.info("slideDelay: " + rm.getGlobal('pfEnv').slideDelay);
     console.info("isRandom: " + rm.getGlobal('pfEnv').isRandom);
-
+    rm.getGlobal('registerPfListener')(changeListener);
     startSlideshow();
 }
 
 
 async function startSlideshow() {
-    var res = await getFile(rm.getGlobal('pfEnv').imgList);
-    if (res.status == 200) {
-        stageSlides(res.responseXML);
+    var res = rm.getGlobal('pfImgsXML');
+    console.info("IMG XML: " + res);
+    if (res != null) {
+        stageSlides(new DOMParser().parseFromString(res,"text/xml"));
     } else {
         document.getElementById("photoDisplay").innerHTML = "Unable to find '" + rm.getGlobal('pfEnv').imgList + "'";
     }
@@ -73,7 +75,8 @@ function stageSlides(xmlDoc) {
 
     loadImage(imgIndex, imgUrls);
 
-    setInterval(function () {
+    curInrvl = setInterval(function () {
+        //TODO if change in image list or settings, reload
         imgIndex++;
         if (imgIndex >= imgUrls.length) {
             imgIndex = 0;
@@ -84,4 +87,20 @@ function stageSlides(xmlDoc) {
 
         loadImage(imgIndex, imgUrls);
     }, rm.getGlobal('pfEnv').slideDelay);
+}
+
+function changeListener(event) {
+    console.info("Event fired: " + event);
+    clearInterval(curInrvl);
+    switch (event) {
+        case "IMG_LIST_CHANGE":
+            startSlideshow();
+            break;
+        case "SETTINGS_CHANGE":
+            startSlideshow();
+            break;
+        default:
+            startSlideshow();
+            break;
+    }
 }

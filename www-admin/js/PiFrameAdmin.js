@@ -1,4 +1,4 @@
-var pfSet;
+var pfSet,pfSrvSet;
 
 function getFile(filePath) {
     console.info("Loading file: " + filePath);
@@ -32,24 +32,36 @@ function closeNav() {
 }
 
 async function populateSettings() {
-    pfSet = JSON.parse((await getFile('settings.json')).responseText);
+    pfSrvSet = JSON.parse((await getFile('settings.json')).responseText);
+
+    if( sessionStorage.getItem("pfSet") == null){
+        console.info("No sessionStorage for pfSet");
+        //Create an immutible copy of the settings
+        pfSet = JSON.parse(JSON.stringify(pfSrvSet));
+    }else{
+        console.info("Loading previous sessionStorage for pfSet");
+        pfSet = JSON.parse(sessionStorage.getItem("pfSet"));
+        console.info(pfSet);
+    }
 
     Object.keys(pfSet).forEach(function (i) {
-        console.info(i + " - " + pfSet[i]);
+        console.debug(i + " - " + pfSet[i].label + ": " + pfSet[i].value);
 
         var doc = document.getElementById("settings").innerHTML;
         var psDiv =
             "<div class='row'> \
             <div class='col-25'> \
-                <label for=" + i + ">" + i + "</label> \
+                <label for=" + i + ">" + pfSet[i].label + "</label> \
             </div> \
             <div class='col-75'> \
-                <input type='text' id=" + i + " name=" + i + " value=" + pfSet[i] + "> \
+                <input type='text' id=" + i + " name=" + i + " value=" + pfSet[i].value + " onKeyUp='changeListener()'> \
             </div> \
         </div>"
 
         document.getElementById("settings").innerHTML = doc + psDiv;
     });
+
+    changeListener();
 }
 
 function submitForm() {
@@ -67,7 +79,6 @@ function submitForm() {
 
     var json = JSON.stringify(data);
     console.info(data);
-    console.info(json.substring(1,json.length-1));
 
     var xhr = new XMLHttpRequest();
     xhr.open("PUT", url, true);
@@ -75,6 +86,9 @@ function submitForm() {
     xhr.onload = function () {
         var users = JSON.parse(xhr.responseText);
         if (xhr.readyState == 4 && xhr.status == "200") {
+            document.getElementById("bSave").disabled = true;
+            document.getElementById("bCancel").disabled = true;
+
             console.table(users);
         } else {
             console.error(users);
@@ -85,4 +99,40 @@ function submitForm() {
 
 function clearChanges() {
     console.info("Oh wait, nevermind");
+    Object.keys(pfSrvSet).forEach(function (i) {
+        console.info(i + " - " + pfSrvSet[i].value);
+
+        document.getElementById(i).value = pfSrvSet[i].value;
+    });
+
+    document.getElementById("bSave").disabled = true;
+    document.getElementById("bCancel").disabled = true;
+}
+
+function changeListener() {
+    var isChanged = false;
+
+    Object.keys(pfSrvSet).forEach(function (i) {
+        console.info(i + " - " + document.getElementById(i).value + "::" + pfSrvSet[i].value);
+
+        if ((document.getElementById(i).value).toString() != (pfSrvSet[i].value).toString()) {
+            console.info(i + " has changed values!");
+            console.info("Form value type: " + typeof (document.getElementById(i).value));
+            console.info("Setting value tyep: " + typeof (pfSrvSet[i].value));
+            pfSet[i].value = document.getElementById(i).value;
+            isChanged = true;
+        }
+    });
+
+    if (isChanged) {
+        document.getElementById("bSave").disabled = false;
+        document.getElementById("bCancel").disabled = false;
+        sessionStorage.setItem("pfSet", JSON.stringify(pfSet));
+    } else {
+        console.info("Nothing has changed")
+        document.getElementById("bSave").disabled = true;
+        document.getElementById("bCancel").disabled = true;
+        sessionStorage.removeItem("pfSet");
+        console.info(sessionStorage.getItem("pfSet"));
+    }
 }

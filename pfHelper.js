@@ -1,9 +1,10 @@
 const fs = require('fs');
 const piSettings = './settings.json';
+var pfListeners = Array();
 
 process.env.ADMIN_PORT = "8080";
 process.env.ADMIN_SERVER = "true";
-process.env.LOG_LEVEL = "debug";
+process.env.LOG_LEVEL = "warn";
 
 global.pfEnv = {
     imgPath: "images/sample/",
@@ -12,13 +13,28 @@ global.pfEnv = {
     isRandom: true
 }
 
+global.pfImgsXML = null;
+
+global.registerPfListener = function (listener) {
+    console.info("Registering listener");
+    pfListeners.push(listener);
+}
+
 async function initializeSettings() {
     console.info("Initializing settings");
 
     if (fs.existsSync(piSettings)) {
         const jsonDoc = require(piSettings);
+        global.pfEnvRaw = jsonDoc;
 
-        console.debug(piSettings + ":\n" + jsonDoc);
+        if (jsonDoc.serverSettings.ADMIN_LOG_LEVEL != null) {
+            console.info("Setting ADMIN_LOG_LEVEL (" + process.env.LOG_LEVEL + ") to " + jsonDoc.serverSettings.ADMIN_LOG_LEVEL);
+            process.env.LOG_LEVEL = jsonDoc.serverSettings.ADMIN_LOG_LEVEL;
+        }
+
+        watchFile(piSettings);
+        console.debug(piSettings + ":");
+        console.debug(jsonDoc);
 
         //Load environmental variables
         if (jsonDoc.serverSettings.ADMIN_PORT != null) {
@@ -32,23 +48,67 @@ async function initializeSettings() {
 
         //Load application variables
         if (jsonDoc.viewSettings.imgPath != null) {
-            console.info("Setting imgPath (" + global.pfEnv.imgPath + ") to " + jsonDoc.viewSettings.imgPath);
-            global.pfEnv.imgPath = jsonDoc.viewSettings.imgPath;
+            console.info("Setting imgPath (" + global.pfEnv.imgPath + ") to " + jsonDoc.viewSettings.imgPath.value);
+            global.pfEnv.imgPath = jsonDoc.viewSettings.imgPath.value;
         }
         if (jsonDoc.viewSettings.imgList != null) {
-            console.info("Setting imgList (" + global.pfEnv.imgList + ") to " + jsonDoc.viewSettings.imgList);
-            global.pfEnv.imgList = jsonDoc.viewSettings.imgList;
+            console.info("Setting imgList (" + global.pfEnv.imgList + ") to " + jsonDoc.viewSettings.imgList.value);
+            global.pfEnv.imgList = jsonDoc.viewSettings.imgList.value;
         }
         if (jsonDoc.viewSettings.slideDelay != null) {
-            console.info("Setting slideDelay (" + global.pfEnv.slideDelay + ") to " + jsonDoc.viewSettings.slideDelay);
-            global.pfEnv.slideDelay = jsonDoc.viewSettings.slideDelay;
+            console.info("Setting slideDelay (" + global.pfEnv.slideDelay + ") to " + jsonDoc.viewSettings.slideDelay.value);
+            global.pfEnv.slideDelay = jsonDoc.viewSettings.slideDelay.value;
         }
         if (jsonDoc.viewSettings.randomize != null) {
-            console.info("Setting imgPath (" + global.pfEnv.isRandom + ") to " + jsonDoc.viewSettings.randomize);
-            global.pfEnv.isRandom = jsonDoc.viewSettings.randomize;
+            console.info("Setting imgPath (" + global.pfEnv.isRandom + ") to " + jsonDoc.viewSettings.randomize.value);
+            global.pfEnv.isRandom = jsonDoc.viewSettings.randomize.value;
         }
+
+        fs.readFile("www/" + global.pfEnv.imgList, 'utf8', function (err, data) {
+            if (!err) {
+                global.pfImgsXML = data;
+            } else {
+                console.warn("Unable to load file: " + "www/" + global.pfEnv.imgList);
+            }
+        });
+        watchFile("www/" + global.pfEnv.imgList);
     } else {
-        console.warn("Unabled to locate settings file: " + piSettings);
+        console.warn("Unable to locate settings file: " + piSettings);
     }
 }
 module.exports.initializeSettings = initializeSettings;
+
+var isLocked = false;
+function watchFile(file) {
+    console.info("Watching: " + file);
+    fs.watch(file, function (event, filename) {
+        console.info("isLocked: " + isLocked);
+        if (event == "change" && !isLocked) {
+            isLocked = true;
+
+            console.info(event + ":" + filename);
+            switch (filename) {
+                case global.pfEnv.imgList:
+                    fs.readFile("www/" + global.pfEnv.imgList, 'utf8', function (err, data) {
+                        if (!err) {
+                            global.pfImgsXML = data;
+                            pfListeners.forEach(listener => {
+                                listener("IMG_LIST_CHANGE");
+                            });
+                        } else {
+                            console.warn("Unable to load file: " + "www/" + global.pfEnv.imgList);
+                        }
+                    });
+                    break;
+
+                default:
+                    console.warn("No action taken for: '"  + filename + "'");
+                    break;
+            }
+
+            setTimeout(function () {
+                isLocked = false;
+            }, 1000);
+        }
+    });
+}

@@ -1,14 +1,26 @@
 {
     "_comment": "To set a variable to a custom value, remove the preceding '_'",
     "viewSettings": {
-        "slideDelay": 10000,
-        "imagePath": "images/sample/",
-        "imgList": "images.xml",
-        "randomize": true
+        "slideDelay": {
+            "value": 10000,
+            "label": "Slide Delay (ms)"
+        },
+        "imagePath": {
+            "value": "images/sample/",
+            "label": "Images Folder"
+        },
+        "imgList": {
+            "value": "images.xml",
+            "label": "Image List"
+        },
+        "randomize": {
+            "value": true,
+            "label": "Randomize Slides"
+        }
     },
     "serverSettings": {
         "ADMIN_SERVER": true,
         "ADMIN_PORT": 8080,
-        "ADMIN_LOG_LEVEL:": "debug"
+        "ADMIN_LOG_LEVEL": "debug"
     }
 }

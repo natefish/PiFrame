@@ -143,6 +143,10 @@ label {
     background-color: #45a049;
 }
 
+.pfButton:disabled {
+    background-color: #79ad7c;
+}
+
 .container {
     border-radius: 5px;
     background-color: #f2f2f2;
