@@ -32,7 +32,7 @@ function closeNav() {
 }
 
 async function populateSettings() {
-    pfSrvSet = JSON.parse((await getFile('settings.json')).responseText);
+    pfSrvSet = JSON.parse((await getFile('/api/v1/settings')).responseText);
 
     if( sessionStorage.getItem("pfSet") == null){
         console.info("No sessionStorage for pfSet");

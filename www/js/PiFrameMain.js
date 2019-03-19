@@ -1,31 +1,16 @@
 const rm = require('electron').remote;
 var curInrvl;
 
-function getFile(filePath) {
-    console.info("Loading file: " + filePath);
-
-    return new Promise(function (resolve, reject) {
-        const xhttp = new XMLHttpRequest();
-
-        xhttp.open("GET", filePath, true);
-        xhttp.onload = function () {
-            resolve(this);
-        };
-        xhttp.onerror = function () {
-            reject(new Error("Unabled to load " + filePath));
-        };
-        xhttp.send();
-    });
-}
-
 async function initializeSettings() {
     console.info("Initializing settings");
     console.info("imgPath: " + rm.getGlobal('pfEnv').imgPath);
     console.info("imgList: " + rm.getGlobal('pfEnv').imgList);
     console.info("slideDelay: " + rm.getGlobal('pfEnv').slideDelay);
     console.info("isRandom: " + rm.getGlobal('pfEnv').isRandom);
-    rm.getGlobal('registerPfListener')(changeListener);
+    rm.getGlobal('registerPfListener')(pfEventListener);
     startSlideshow();
+
+    return true;
 }
 
 
@@ -89,7 +74,7 @@ function stageSlides(xmlDoc) {
     }, rm.getGlobal('pfEnv').slideDelay);
 }
 
-function changeListener(event) {
+function pfEventListener(event) {
     console.info("Event fired: " + event);
     clearInterval(curInrvl);
     switch (event) {

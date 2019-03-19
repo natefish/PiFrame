@@ -17,15 +17,16 @@ module.exports.startServer = startServer;
 function reqLogger(req) {
   switch (req.url) {
     case '/inform':
-      console.info("* New Request" + req.url);
+      console.info("* New Requesta: '" + req.url + "'");
       break;
     default:
       console.info("\n\n*****************************");
-      console.info("* New Request" + req.url);
+      console.info("* New Request: '" + req.url + "'");
       console.info("*****************************");
       console.info(req.headers);
       console.info(req.url);
       console.info(req.method);
+      console.info("*****************************\n\n");
   }
 
 }
@@ -50,8 +51,8 @@ function handleGET(req, res) {
 
   if (req.url == '/') {
     filePath = '/www-admin/index.html';
-  } else if (req.url == '/settings.json') {
-    filePath = req.url;
+  } else if (req.url == '/api/v1/settings') {
+    filePath = '/settings.json';
   } else {
     filePath = '/www-admin' + req.url;
   }
@@ -73,9 +74,9 @@ function handleGET(req, res) {
       contentType = 'text/html';
   }
 
-  if (req.url == '/settings.json') {
+  if (req.url == '/api/v1/settings') {
     data = JSON.stringify(global.pfEnvRaw.viewSettings);
-    console.debug("Sending settings: \n" + data);
+    console.info("Sending settings: \n" + data);
 
     res.writeHead(200, { 'Content-Type': contentType });
     res.write(data);
@@ -105,7 +106,7 @@ function handleGET(req, res) {
 }
 
 function handlePUT(req, res) {
-  var filePath;
+  var filePath = "";
 
   var body = "";
   req.on('data', function (data) {
@@ -120,38 +121,61 @@ function handlePUT(req, res) {
   });
 
   req.on('end', function () {
+
     console.info(JSON.parse(body));
-  });
 
-  if (req.url == '/') {
-    filePath = '/www-admin/index.html';
-  } else if (req.url == '/api/v1/settings') {
-    filePath = '/settings.json';
-  } else {
-    filePath = '/www-admin' + req.url;
-  }
+    if (req.url == '/api/v1/settings') {
+      var newSet = JSON.parse(body);
 
-  filePath = __dirname + filePath;
+      filePath = __dirname + '/settings.json';
 
-  fs.exists(filePath, function (exists) {
-    if (exists) {
-      fs.readFile(filePath, function (err, data) {
+      fs.exists(filePath, function (exists) {
+        if (exists) {
+          fs.readFile(filePath, function (err, data) {
+            var jsonDoc = JSON.parse(data);
 
+            if (err) {
+              console.error(filePath)
+              res.writeHead(500);
+              res.end();
+            } else {
+              if (jsonDoc.viewSettings.imgPath != null && newSet.imgPath != "") {
+                console.info("Setting imgPath (" + jsonDoc.viewSettings.imgPath.value + ") to " + newSet.imgPath);
+                jsonDoc.viewSettings.imgPath.value = newSet.imgPath;
+              }
+              if (jsonDoc.viewSettings.imgList != null && newSet.imgList != "") {
+                console.info("Setting imgList (" + jsonDoc.viewSettings.imgList.value + ") to " + newSet.imgList);
+                jsonDoc.viewSettings.imgList.value = newSet.imgList;
+              }
+              if (jsonDoc.viewSettings.slideDelay != null && newSet.slideDelay != "") {
+                console.info("Setting slideDelay (" + jsonDoc.viewSettings.slideDelay.value + ") to " + newSet.slideDelay);
+                jsonDoc.viewSettings.slideDelay.value = parseInt(newSet.slideDelay);
+              }
+              if (jsonDoc.viewSettings.randomize != null && newSet.randomize != "") {
+                console.info("Setting radnomize (" + jsonDoc.viewSettings.randomize.value + ") to " + newSet.randomize);
+                jsonDoc.viewSettings.randomize.value = newSet.randomize.toLowerCase() === 'true';
+              }
 
-        if (err) {
-          console.error(filePath)
-          res.writeHead(500);
-          res.end();
+              fs.writeFile(filePath, JSON.stringify(jsonDoc,null,4), 'utf8', function (err) {
+                if (err) {
+                  console.error(filePath)
+                  res.writeHead(500);
+                  res.end();
+                } else {
+                  res.writeHead(200, { 'Content-Type': 'text/json' });
+                  res.write(JSON.stringify({ 'success': true }));
+                  res.end();
+                }
+              });//fs.writeFile
+            }
+          });//fs.readFile
         } else {
-          res.writeHead(200, { 'Content-Type': 'text/json' });
-          res.write(JSON.stringify({ 'success': true }));
+          console.error(filePath)
+          res.writeHead(404, { 'Content-Type': 'text/json' });
+          res.write(JSON.stringify({ 'success': false }));
           res.end();
         }
       });
-    } else {
-      console.error(filePath)
-      res.writeHead(404);
-      res.end();
     }
   });
 }
