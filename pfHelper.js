@@ -1,4 +1,5 @@
 const fs = require('fs');
+const cproc = require('child_process');
 const PI_SETTINGS = './settings.json';
 var pfListeners = Array();
 
@@ -10,17 +11,20 @@ global.pfEnv = {
     imgPath: "images/sample/",
     imgList: "images-example.xml",
     slideDelay: 30000,
-    isRandom: true
+    isRandom: true,
+    startTime: 0,
+    endTime: 0
 }
 
 global.pfImgsXML = null;
+global.pfIsPaused = false;
 
 global.registerPfListener = function (listener) {
     console.info("Registering listener");
     pfListeners.push(listener);
 }
 
-function loadViewSettings(jsonDoc){
+function loadViewSettings(jsonDoc) {
     //Load application variables
     if (jsonDoc.viewSettings.imgPath != null) {
         console.info("Setting imgPath (" + global.pfEnv.imgPath + ") to " + jsonDoc.viewSettings.imgPath.value);
@@ -35,10 +39,19 @@ function loadViewSettings(jsonDoc){
         global.pfEnv.slideDelay = jsonDoc.viewSettings.slideDelay.value;
     }
     if (jsonDoc.viewSettings.randomize != null) {
-        console.info("Setting radnomize (" + global.pfEnv.isRandom + ") to " + jsonDoc.viewSettings.randomize.value);
+        console.info("Setting randomize (" + global.pfEnv.isRandom + ") to " + jsonDoc.viewSettings.randomize.value);
         global.pfEnv.isRandom = jsonDoc.viewSettings.randomize.value;
     }
-  
+    if (jsonDoc.viewSettings.startTime != null) {
+        console.info("Setting startTime (" + global.pfEnv.startTime + ") to " + jsonDoc.viewSettings.startTime.value);
+        global.pfEnv.startTime = jsonDoc.viewSettings.startTime.value;
+    }
+    if (jsonDoc.viewSettings.endTime != null) {
+        console.info("Setting endTime (" + global.pfEnv.endTime + ") to " + jsonDoc.viewSettings.endTime.value);
+        global.pfEnv.endTime = jsonDoc.viewSettings.endTime.value;
+    }
+
+    autoManageDisplay();
 }
 
 async function initializeSettings() {
@@ -78,6 +91,9 @@ async function initializeSettings() {
             }
         });
         watchFile("www/" + global.pfEnv.imgList);
+
+
+
     } else {
         console.warn("Unable to locate settings file: " + PI_SETTINGS);
     }
@@ -104,7 +120,7 @@ function watchFile(file) {
                     fs.readFile("www/" + global.pfEnv.imgList, 'utf8', function (err, data) {
                         if (!err) {
                             global.pfImgsXML = data;
-                            notifyListeners("IMG_LIST_" + event.toUpperCase());
+                            notifyListeners("IMG_LIST_" + event.toUpperCase(), data);
                         } else {
                             console.warn("Unable to load file: " + "www/" + global.pfEnv.imgList);
                         }
@@ -113,8 +129,9 @@ function watchFile(file) {
                 case PI_SETTINGS.substr(PI_SETTINGS.lastIndexOf("/") + 1, PI_SETTINGS.length):
                     fs.readFile(PI_SETTINGS, 'utf8', async function (err, data) {
                         if (!err) {
+                            global.pfEnvRaw = JSON.parse(data);
                             await loadViewSettings(JSON.parse(data));
-                            notifyListeners("SETTINGS_" + event.toUpperCase());
+                            notifyListeners("SETTINGS_" + event.toUpperCase(), null);
                         } else {
                             console.warn("Unable to load settings file!");
                         }
@@ -130,4 +147,73 @@ function watchFile(file) {
             }, 1000);
         }
     });
+}
+
+
+function execute(command, callback) {
+    cproc.exec(command, (error, stdout, stderr) => {
+        console.info("Error: " + error);
+        console.info("Stdout: " + stdout);
+        console.info("Stderr" + stderr);
+        callback(stdout);
+    });
+};
+
+// call the function
+function displayOn() {
+    global.pfIsPaused = false;
+    notifyListeners("SLIDESHOW_PAUSED", global.pfIsPaused);
+
+    console.log("Display On");
+
+    execute('vcgencmd display_power 1', (output) => {
+        console.log(output);
+    });
+}
+module.exports.displayOn = displayOn;
+
+
+function displayOff() {
+    global.pfIsPaused = true;
+    notifyListeners("SLIDESHOW_PAUSED", global.pfIsPaused);
+
+    console.log("Display Off");
+
+    execute('vcgencmd display_power 0', (output) => {
+        console.log(output);
+    });
+}
+module.exports.displayOff = displayOff;
+
+var displayTimer;
+function autoManageDisplay() {
+    if (displayTimer != null) {
+        clearInterval(displayTimer);
+    }
+
+    if (global.pfEnv.startTime != "00:00" || global.pfEnv.endTime != "00:00") {
+        displayTimer = setInterval(() => {
+            var now = new Date();
+            var shm = global.pfEnv.startTime.split(":");
+            var ehm = global.pfEnv.endTime.split(":");
+            var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), shm[0], shm[1]);
+            var end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), ehm[0], ehm[1]);
+
+            var opts = { hour12: false, hour: "2-digit", minute: "2-digit" };
+            /*
+            console.info("Time (cur/start/end/isPaused):" +
+             now.toLocaleTimeString('en-US',opts) + " / " + 
+             start.toLocaleTimeString('en-US',opts) + " / " +
+             end.toLocaleTimeString('en-US',opts) + " / " +
+             global.pfIsPaused);
+
+             console.log("Evaluating timer (" + (now >= start) + ", " + (now >= end) + ", " + global.pfIsPaused + ")");
+            */
+            if (now >= start && now <= end && global.pfIsPaused) {
+                displayOn();
+            } else if (now >= end && !global.pfIsPaused) {
+                displayOff();
+            }
+        }, 5000);
+    }
 }

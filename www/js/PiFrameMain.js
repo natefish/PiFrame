@@ -12,13 +12,14 @@ async function initializeSettings() {
 
     return true;
 }
+module.exports.initializeSettings = initializeSettings;
 
 
 async function startSlideshow() {
     var res = rm.getGlobal('pfImgsXML');
     console.info("IMG XML: " + res);
     if (res != null) {
-        stageSlides(new DOMParser().parseFromString(res,"text/xml"));
+        stageSlides(new DOMParser().parseFromString(res, "text/xml"));
     } else {
         document.getElementById("photoDisplay").innerHTML = "Unable to find '" + rm.getGlobal('pfEnv').imgList + "'";
     }
@@ -61,28 +62,35 @@ function stageSlides(xmlDoc) {
     loadImage(imgIndex, imgUrls);
 
     curInrvl = setInterval(function () {
-        //TODO if change in image list or settings, reload
-        imgIndex++;
-        if (imgIndex >= imgUrls.length) {
-            imgIndex = 0;
-            if (rm.getGlobal('pfEnv').isRandom) {
-                imgUrls.sort(function (a, b) { return 0.5 - Math.random() });
+        if (!(rm.getGlobal('pfIsPaused'))) {
+            imgIndex++;
+            if (imgIndex >= imgUrls.length) {
+                imgIndex = 0;
+                if (rm.getGlobal('pfEnv').isRandom) {
+                    imgUrls.sort(function (a, b) { return 0.5 - Math.random() });
+                }
             }
-        }
 
-        loadImage(imgIndex, imgUrls);
+            loadImage(imgIndex, imgUrls);
+        }
     }, rm.getGlobal('pfEnv').slideDelay);
 }
 
-function pfEventListener(event) {
+function pfEventListener(event, data) {
     console.info("Event fired: " + event);
-    clearInterval(curInrvl);
     switch (event) {
         case "IMG_LIST_CHANGE":
-            startSlideshow();
+            clearInterval(curInrvl);
+            stageSlides(data);
             break;
         case "SETTINGS_CHANGE":
+            clearInterval(curInrvl);
             startSlideshow();
+            break;
+        case "SLIDESHOW_PAUSED":
+            console.log("SLIDESHOW_PAUSED: " + data);
+            //reset the timer's start time to current
+            curInrvl.refresh();
             break;
         default:
             startSlideshow();

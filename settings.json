@@ -16,6 +16,14 @@
         "randomize": {
             "value": true,
             "label": "Randomize Slides"
+        },
+        "startTime": {
+            "value": "07:08",
+            "label": "Start Time (HH:mm)"
+        },
+        "endTime": {
+            "value": "07:10",
+            "label": "End Time (HH:mm)"
         }
     },
     "serverSettings": {

@@ -17,7 +17,7 @@ module.exports.startServer = startServer;
 function reqLogger(req) {
   switch (req.url) {
     case '/inform':
-      console.info("* New Requesta: '" + req.url + "'");
+      //console.info("* New Requesta: '" + req.url + "'");
       break;
     default:
       console.info("\n\n*****************************");

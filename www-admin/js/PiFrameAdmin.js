@@ -1,17 +1,17 @@
-var pfSet,pfSrvSet;
+let pfSet, pfSrvSet;
 
-function getFile(filePath) {
-    console.info("Loading file: " + filePath);
+function callAPI(apiCall) {
+    console.info("Loading file: " + apiCall);
 
     return new Promise(function (resolve, reject) {
         const xhttp = new XMLHttpRequest();
 
-        xhttp.open("GET", filePath, true);
+        xhttp.open("GET", apiCall, true);
         xhttp.onload = function () {
             resolve(this);
         };
         xhttp.onerror = function () {
-            reject(new Error("Unabled to load " + filePath));
+            reject(new Error("Unabled to load " + apiCall));
         };
         xhttp.send();
     });
@@ -32,20 +32,26 @@ function closeNav() {
 }
 
 async function populateSettings() {
-    pfSrvSet = JSON.parse((await getFile('/api/v1/settings')).responseText);
+    var rawSrvResp = (await callAPI('/api/v1/settings')).responseText;
+    pfSrvSet = JSON.parse(rawSrvResp);
+    console.debug(pfSrvSet);
 
-    if( sessionStorage.getItem("pfSet") == null){
+    //Check for previous session or outdated session
+    if (sessionStorage.getItem("pfSet") == null || 
+    Object.keys(JSON.parse(sessionStorage.getItem("pfSet"))).length != Object.keys(pfSrvSet).length) {
         console.info("No sessionStorage for pfSet");
-        //Create an immutible copy of the settings
-        pfSet = JSON.parse(JSON.stringify(pfSrvSet));
-    }else{
+        //Set the working copy
+        pfSet = JSON.parse(rawSrvResp);
+        console.debug(pfSet);
+    } else {
         console.info("Loading previous sessionStorage for pfSet");
+        //Set the working copy
         pfSet = JSON.parse(sessionStorage.getItem("pfSet"));
-        console.info(pfSet);
+        console.debug(pfSet);
     }
 
     Object.keys(pfSet).forEach(function (i) {
-        console.debug(i + " - " + pfSet[i].label + ": " + pfSet[i].value);
+        console.info(i + " - " + pfSet[i].label + ": " + pfSet[i].value);
 
         var doc = document.getElementById("settings").innerHTML;
         var psDiv =
@@ -54,7 +60,7 @@ async function populateSettings() {
                 <label for=" + i + ">" + pfSet[i].label + "</label> \
             </div> \
             <div class='col-75'> \
-                <input type='text' id=" + i + " name=" + i + " value=" + pfSet[i].value + " onKeyUp='changeListener()'> \
+                <input type='text' id=" + i + " name=" + i + " value='" + pfSet[i].value + "' onKeyUp='changeListener()'> \
             </div> \
         </div>"
 
@@ -105,8 +111,35 @@ function clearChanges() {
         document.getElementById(i).value = pfSrvSet[i].value;
     });
 
+    sessionStorage.removeItem("pfSet");
     document.getElementById("bSave").disabled = true;
     document.getElementById("bCancel").disabled = true;
+}
+
+function toggleScreen() {
+    console.info("Toggling Screen");
+
+    var url = "/api/v1/control";
+
+    var json = JSON.stringify(data);
+    console.info(data);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("PUT", url, true);
+    xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+    xhr.onload = function () {
+        var users = JSON.parse(xhr.responseText);
+        if (xhr.readyState == 4 && xhr.status == "200") {
+            //            document.getElementById("bSave").disabled = true;
+            //            document.getElementById("bCancel").disabled = true;
+
+            console.table(users);
+        } else {
+            console.error(users);
+        }
+    }
+    xhr.send(json);
+
 }
 
 function changeListener() {
@@ -119,7 +152,7 @@ function changeListener() {
             console.info(i + " has changed values!");
             console.info("Form value type: " + typeof (document.getElementById(i).value));
             console.info("Setting value tyep: " + typeof (pfSrvSet[i].value));
-            pfSet[i].value = document.getElementById(i).value;
+            pfSet[i].value = "\"" + document.getElementById(i).value + "\"";
             isChanged = true;
         }
     });
