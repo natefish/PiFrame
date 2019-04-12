@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [[ $(id -ru) != 0 ]]; then
+if [ $(id -ru) != 0 ]; then
     echo "Please run as root"
-    exit
+    exit 1
 fi
 
 whatif=0
@@ -15,7 +15,8 @@ usage()
     echo ""
     echo "-l|--log          Log path. Default is './setup.log'"
     echo "-i|--installonly  Do not uninstall programs not used by PiFrame."
-    echo "-w|--whatif       See the list of commands that will be run without actually running them."
+    echo "-w|--whatif       See the list of commands that will be run without"
+    echo "                  actually running them."
     echo "-h|--help         Show help."
 }
 
@@ -44,23 +45,31 @@ echo "whatif=$whatif" | tee -a $logfile
 if [ "$cleanup" = "1" ]; then
     # Unneeded packages
     pkgs="
-    idle python3-pygame python-pygame python-tk
-    idle3 python3-tk
+    bluej
+    debian-reference-en
+    dillo
+    geany geany-common
+    greenfoot
+    idle idle3
+    libreoffice*
+    minecraft-pi python-minecraftpi
+    oracle-java8-jdk
+    penguinspuzzle
+    pistore
+    python3-numpy
+    python3-pifacecommon python3-pifacedigitalio python3-pifacedigital-scratch-handler python-pifacecommon python-pifacedigitalio
+    python3-pygame python-pygame python-tk
+    python3-tk
     python3-rpi.gpio
     python-serial python3-serial
     python-picamera python3-picamera
-    debian-reference-en dillo x2x
     scratch nuscratch
-    raspberrypi-ui-mods
-    timidity
-    smartsim penguinspuzzle
-    pistore
+    smartsim
     sonic-pi
-    python3-numpy
-    python3-pifacecommon python3-pifacedigitalio python3-pifacedigital-scratch-handler python-pifacecommon python-pifacedigitalio
-    oracle-java8-jdk
-    minecraft-pi python-minecraftpi
+    timidity
     wolfram-engine
+    vlc
+    x2x
     "
 
     # Remove packages
