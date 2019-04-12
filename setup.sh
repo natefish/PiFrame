@@ -1,11 +1,23 @@
+#!/bin/bash
+
+if [[ $(id -ru) != 0 ]]; then
+    echo "Please run as root"
+    exit
+fi
+
 whatif=0
 cleanup=1
 logfile="./setup.log"
 
-if (( $EUID != 0 )); then
-    echo "Please run as root"
-    exit
-fi
+usage()
+{
+    echo "usage: setup [[-i ] [-w]] | [-h]"
+    echo ""
+    echo "-l|--log          Log path. Default is './setup.log'"
+    echo "-i|--installonly  Do not uninstall programs not used by PiFrame."
+    echo "-w|--whatif       See the list of commands that will be run without actually running them."
+    echo "-h|--help         Show help."
+}
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -25,21 +37,11 @@ while [ "$1" != "" ]; do
     shift
 done
 
-usage()
-{
-    echo "usage: setup [[-i ] [-w]] | [-h]]"
-    echo ""
-    echo "-l|--log          Log path. Default is './setup.log'"
-    echo "-i|--installonly  Do not uninstall programs not used by PiFrame."
-    echo "-w|--whatif       See the list of commands that will be run without actually running them."
-    echo "-h|--help         Show help."
-}
-
 echo $(date +"%x %r %Z") | tee $logfile
 echo "installonly=$cleanup" | tee -a $logfile
 echo "whatif=$whatif" | tee -a $logfile
 
-if [ "$cleanup" = "1"]; then
+if [ "$cleanup" = "1" ]; then
     # Unneeded packages
     pkgs="
     idle python3-pygame python-pygame python-tk
@@ -64,7 +66,7 @@ if [ "$cleanup" = "1"]; then
     # Remove packages
     for i in $pkgs; do
         echo apt-get -y remove --purge $i | tee -a $logfile
-        if [ "$whatif" = "0"]; then
+        if [ "$whatif" = "0" ]; then
             apt-get -y remove --purge $i | tee -a $logfile
         fi
     done
@@ -72,7 +74,7 @@ if [ "$cleanup" = "1"]; then
     # Remove automatically installed dependency packages
     echo apt-get -y clean | tee -a $logfile
     echo apt-get -y autoremove | tee -a $logfile
-    if [ "$whatif" = "0"]; then
+    if [ "$whatif" = "0" ]; then
         apt-get -y clean | tee -a $logfile
         apt-get -y autoremove | tee -a $logfile
     fi
@@ -81,7 +83,7 @@ fi
 # Update and do a full upgrade of remaining packages
 echo apt-get -y update | tee -a $logfile
 echo apt-get -y dist-upgrade | tee -a $logfile
-if [ "$whatif" = "0"]; then
+if [ "$whatif" = "0" ]; then
     apt-get -y update | tee -a $logfile
     apt-get -y dist-upgrade | tee -a $logfile
 fi
@@ -97,14 +99,14 @@ chromium
 # Install packages
 for i in $pkgs; do
 	echo apt-get -y install $i | tee -a $logfile
-    if [ "$whatif" = "0"]; then
+    if [ "$whatif" = "0" ]; then
     	apt-get -y install $i | tee -a $logfile
     fi
 done
 
 echo apt-get -y clean | tee -a $logfile
 echo apt-get -y autoremove | tee -a $logfile
-if [ "$whatif" = "0"]; then
+if [ "$whatif" = "0" ]; then
     apt-get -y clean | tee -a $logfile
     apt-get -y autoremove | tee -a $logfile
 fi
