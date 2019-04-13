@@ -195,10 +195,10 @@ if [ "$whatif" = "0" ]; then
 
     piSite="/etc/nginx/sites-available/PiFrame"
 
-    if [ ! -f $piSite ]; then
+    if [ -f $piSite ]; then
         echo "File '$piSite' already exists!"
     else
-        echo -e $piSiteConfig | sudo tee $piSite
+        echo -e $piSiteConfig|sudo tee $piSite
     fi
 
     if [ ! -f /etc/nginx/sites-enabled/PiFrame ]; then
