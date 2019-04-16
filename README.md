@@ -2,7 +2,7 @@
 _**NOTE:** I used a Raspberry Pi 3 Model A+ and Raspbian OS for my build._
 
 ## Get the installation script
-Copy the install script like the Downloads folder:
+Copy the install script somewhere like the Downloads folder:
 ```shell
 cd ~/Downloads
 wget https://raw.githubusercontent.com/natefish/PiFrame/d942379182ec2a7c8e9af8e8b312258771d5181f/setup.sh
