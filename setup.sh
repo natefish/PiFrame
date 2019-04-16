@@ -1,5 +1,7 @@
 #!/bin/bash
 
+readonly ROOT="/var/PiFrame"
+
 if [ $(id -ru) = 0 ]; then
     echo "Please *do not* run as root"
     exit 1
@@ -77,7 +79,11 @@ if [ "$cleanup" = "1" ]; then
     for i in $pkgs; do
         echo sudo apt-get -y remove --purge $i | tee -a $logfile
         if [ "$whatif" = "0" ]; then
-            sudo apt-get -y remove --purge $i | tee -a $logfile
+            if [ $(dpkg-query -W -f='${Status}' $i 2>/dev/null | grep -c "ok installed") -eq 1 ]; then
+                sudo apt-get -y remove --purge $i | tee -a $logfile
+            else
+                echo "'$i' not installed, moving on."
+            fi
         fi
     done
 
@@ -138,6 +144,7 @@ else
     fi
 fi
 
+#These need to run in the user's context
 if [ -f ~/.config/lxsession/LXDE-pi/autostart ]; then
     echo "'~/.config/lxsession/LXDE-pi/autostart' already exists" | tee -a $logfile
 else
@@ -148,57 +155,58 @@ else
     fi
 fi
 
-if grep -q "@bash /var/PiFrame/StartPiFrame.sh" ~/.config/lxsession/LXDE-pi/autostart; then
-    echo "'@bash /var/PiFrame/StartPiFrame.sh' command already exists" | tee -a $logfile
+#These need to run in the user's context
+if grep -q "@bash $ROOT/StartPiFrame.sh" ~/.config/lxsession/LXDE-pi/autostart; then
+    echo "'@bash $ROOT/StartPiFrame.sh' command already exists" | tee -a $logfile
 else
-    echo "Appending '@bash /var/PiFrame/StartPiFrame.sh'" | tee -a $logfile
-    echo "echo '@bash /var/PiFrame/StartPiFrame.sh' >> ~/.config/lxsession/LXDE-pi/autostart"
+    echo "Appending '@bash $ROOT/StartPiFrame.sh'" | tee -a $logfile
+    echo "echo '@bash $ROOT/StartPiFrame.sh' >> ~/.config/lxsession/LXDE-pi/autostart"
     if [ "$whatif" = "0" ]; then
-        echo "@bash /var/PiFrame/StartPiFrame.sh" >> ~/.config/lxsession/LXDE-pi/autostart
+        echo "@bash $ROOT/StartPiFrame.sh" >> ~/.config/lxsession/LXDE-pi/autostart
     fi
 fi
 
-echo "sudo mkdir -p /var/PiFrame" | tee -a $logfile
-echo "sudo git clone https://www.github.com/natefish/PiFrame /var/PiFrame" | tee -a $logfile
+echo "sudo mkdir -p $ROOT" | tee -a $logfile
+echo "sudo git clone https://www.github.com/natefish/PiFrame $ROOT" | tee -a $logfile
 
-echo "sudo chown -R $USER:$USER /var/PiFrame/www" | tee -a $logfile
-echo "sudo chmod -R 755 /var/PiFrame" | tee -a $logfile
+echo "sudo chown -R $USER:$USER $ROOT/www" | tee -a $logfile
+echo "sudo chmod -R 755 $ROOT" | tee -a $logfile
 
 echo "sudo ln -s $piSite /etc/nginx/sites-enabled/" | tee -a $logfile
 echo "sudo rm /etc/nginx/sites-enabled/default" | tee -a $logfile
 
-piSiteConfig="server {\n
-\t#Only allow localhost\n
-\tlisten 127.0.0.1;\n
-\n
-\troot /var/PiFrame/www;\n
-\tindex index.html\n
-\n
-\tserver_name localhost;\n
-\n
-\tlocation / {\n
-\t\t# First attempt to serve request as file, then\n
-\t\t# as directory, then fall back to displaying a 404.\n
-\t\ttry_files \$uri \$uri/ =404;\n
-\t}\n
+piSiteConfig="server {
+    #Only allow localhost
+    listen 127.0.0.1;
+
+    root $ROOT/www;
+    index index.html
+
+    server_name localhost;
+
+    location / {
+        # First attempt to serve request as file, then
+        # as directory, then fall back to displaying a 404.
+        try_files \$uri \$uri/ =404;
+    }
 }"
 
 if [ "$whatif" = "0" ]; then
-    if [ ! -d /var/PiFrame ]; then
-        sudo mkdir -p /var/PiFrame
+    if [ ! -d $ROOT ]; then
+        sudo mkdir -p $ROOT
     fi
 
-    sudo git clone https://www.github.com/natefish/PiFrame /var/PiFrame
+    sudo git clone https://www.github.com/natefish/PiFrame $ROOT
 
-    sudo chown -R $USER:$USER /var/PiFrame/www
-    sudo chmod -R 755 /var/PiFrame
+    sudo chown -R $USER:$USER $ROOT/www
+    sudo chmod -R 755 $ROOT
 
     piSite="/etc/nginx/sites-available/PiFrame"
 
     if [ -f $piSite ]; then
         echo "File '$piSite' already exists!"
     else
-        echo -e $piSiteConfig|sudo tee $piSite
+        echo "$piSiteConfig" | sudo tee $piSite
     fi
 
     if [ ! -f /etc/nginx/sites-enabled/PiFrame ]; then
@@ -206,5 +214,14 @@ if [ "$whatif" = "0" ]; then
     fi
     if [ -f /etc/nginx/sites-enabled/default ]; then
         sudo rm /etc/nginx/sites-enabled/default
+    fi
+fi
+
+if [ -f $ROOT/www/setings.txt ]; then
+    echo "File '$ROOT/www/setings.txt' already exists!"
+else
+    echo sudo cp $ROOT/www/settings-example.txt $ROOT/www/settings.txt
+    if [ "$whatif" = "0" ]; then
+        sudo cp $ROOT/www/settings-example.txt $ROOT/www/settings.txt
     fi
 fi
