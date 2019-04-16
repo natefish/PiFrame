@@ -20,6 +20,10 @@ From terminal, run the setup script you just coppied (used the flags as desired)
 
 bash ./setup.sh
 ```
+Pin to a specific release for a more stable version (optional):
+```shell
+sudo git checkout v1.0.0
+```
 ## Configure the settings file
 There are serveral configurable settings. To change them, edit settings.txt:
 ```shell
