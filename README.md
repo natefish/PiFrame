@@ -5,7 +5,7 @@ _**NOTE:** I used a Raspberry Pi 3 Model A+ and Raspbian OS for my build._
 Copy the install script like the Downloads folder:
 ```shell
 cd ~/Downloads
-wget https://raw.githubusercontent.com/natefish/PiFrame/aed408591d27f941ad0941c3caefbe4fc6a5bc59/setup.sh
+wget https://raw.githubusercontent.com/natefish/PiFrame/d942379182ec2a7c8e9af8e8b312258771d5181f/setup.sh
 ```
 ## Running the installation script
 From terminal, run the setup script you just coppied (used the flags as desired):
@@ -48,5 +48,5 @@ The set the start and end jobs (mm HH * * * tells the cron job to run every day 
 ```
 
 ### If you appreciate this work or find it useful, consider becoming a Patron or donating
-https://www.patreon.com/reinhanc
+https://www.patreon.com/reinhanc  
 https://paypal.me/NReinhard
