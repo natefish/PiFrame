@@ -33,8 +33,6 @@ done
 popd
 echo "</images>">>$iPath
 
-exit
-
 xset s noblank &
 xset s off &
 xset -dpms &

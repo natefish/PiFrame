@@ -220,8 +220,8 @@ fi
 if [ -f $ROOT/www/setings.txt ]; then
     echo "File '$ROOT/www/setings.txt' already exists!"
 else
-    echo sudo cp $ROOT/www/settings-example.txt $ROOT/www/settings.txt
+    echo cp $ROOT/www/settings-example.txt $ROOT/www/settings.txt
     if [ "$whatif" = "0" ]; then
-        sudo cp $ROOT/www/settings-example.txt $ROOT/www/settings.txt
+        cp $ROOT/www/settings-example.txt $ROOT/www/settings.txt
     fi
 fi

@@ -1,6 +1,6 @@
 var slideDelay = 30000;
 var imgPath = "images/sample/";
-var imgList = "images-example.xml";
+var imgList = "images.xml";
 var isRandom = true;
 
 function getFile(filePath) {
